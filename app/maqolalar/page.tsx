@@ -11,11 +11,11 @@ interface User {
   phone_number: string;
   email: string;
   password: string;
-  maqola: string;
+  maqola: string; // Fayl URL
   createdAt: string;
 }
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function MaqolalarPage() {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
 
@@ -45,21 +45,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   };
 
-  // Maqolani yuklab olish funksiyasi
+  // Faylni yuklab olish funksiyasi
   const downloadArticle = (maqola: string, firstName: string) => {
-    const blob = new Blob([maqola], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
+    if (!maqola) {
+      alert("Fayl topilmadi!");
+      return;
+    }
+    const url = `${API}/uploads/${maqola}`;
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${firstName}_maqola.txt`;
+    a.download = maqola.split("/").pop() || `${firstName}_maqola`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const Logout = () => {
-    router.push("/login");
   };
 
   return (
@@ -71,7 +69,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <ul className="space-y-2">
             <li>
               <button
-                onClick={Logout}
+                onClick={() => router.push("/login")}
                 className="w-full text-left py-2 px-4 rounded text-white bg-red-600 hover:bg-red-700 mt-4"
               >
                 Chiqish
@@ -113,12 +111,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <td className="py-3 px-4">{user.email}</td>
                     <td className="py-3 px-4">{new Date(user.createdAt).toLocaleDateString()}</td>
                     <td className="py-3 px-4 text-center">
-                      <button
-                        onClick={() => downloadArticle(user.maqola, user.first_name)}
-                        className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
-                      >
-                        Yuklab olish 📥
-                      </button>
+                      {user.maqola ? (
+                        <button
+                          onClick={() => downloadArticle(user.maqola, user.first_name)}
+                          className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
+                        >
+                          Yuklab olish 📥
+                        </button>
+                      ) : (
+                        <span className="text-gray-500">Fayl yo‘q</span>
+                      )}
                     </td>
                   </tr>
                 ))}
